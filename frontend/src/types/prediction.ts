@@ -1,5 +1,5 @@
-export type Furnishing = "Furnished" | "Semi-Furnished" | "Unfurnished";
-export type Transaction = "New Property" | "Resale";
+export type Furnishing = "Furnished" | "Semi-Furnished" | "Unfurnished" | "Unknown";
+export type Transaction = "New Property" | "Resale" | "Other";
 export type AreaSource = "carpet" | "super";
 
 // Mirrors Backend/app/schemas/prediction.py::PredictionRequest exactly —

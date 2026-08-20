@@ -94,6 +94,8 @@ const TRANSLATION_KEYS = [
   "footer.itiCredit",
   "footer.builtWith",
   "footer.github",
+  "option.unknown",
+  "option.other",
 ] as const;
 
 export type TranslationKey = (typeof TRANSLATION_KEYS)[number];
@@ -182,6 +184,8 @@ const en: Dict = {
   "footer.itiCredit": "Built as a graduation project for the Information Technology Institute (ITI).",
   "footer.builtWith": "Built with React, FastAPI, and a scikit-learn regression model.",
   "footer.github": "View source on GitHub",
+  "option.unknown": "Unknown",
+  "option.other": "Other",
 };
 
 const ar: Dict = {
@@ -266,6 +270,8 @@ const ar: Dict = {
   "footer.itiCredit": "المشروع ده مشروع تخرج في معهد تكنولوجيا المعلومات (ITI).",
   "footer.builtWith": "اتبنى باستخدام React وFastAPI وموديل انحدار بمكتبة scikit-learn.",
   "footer.github": "شوف الكود على GitHub",
+  "option.unknown": "غير معروف",
+  "option.other": "أخرى",
 };
 
 const es: Dict = {
@@ -350,6 +356,8 @@ const es: Dict = {
   "footer.itiCredit": "Proyecto de graduación para el Information Technology Institute (ITI).",
   "footer.builtWith": "Creado con React, FastAPI y un modelo de regresión de scikit-learn.",
   "footer.github": "Ver código en GitHub",
+  "option.unknown": "Desconocido",
+  "option.other": "Otro",
 };
 
 const fr: Dict = {
@@ -434,6 +442,8 @@ const fr: Dict = {
   "footer.itiCredit": "Projet de fin d'études pour l'Information Technology Institute (ITI).",
   "footer.builtWith": "Développé avec React, FastAPI et un modèle de régression scikit-learn.",
   "footer.github": "Voir le code sur GitHub",
+  "option.unknown": "Inconnu",
+  "option.other": "Autre",
 };
 
 const zh: Dict = {
@@ -518,6 +528,8 @@ const zh: Dict = {
   "footer.itiCredit": "本项目为信息技术学院（ITI）的毕业项目。",
   "footer.builtWith": "使用 React、FastAPI 和 scikit-learn 回归模型构建。",
   "footer.github": "在 GitHub 上查看源代码",
+  "option.unknown": "未知",
+  "option.other": "其他",
 };
 
 export const translations: Record<Locale, Dict> = { en, ar, es, fr, zh };

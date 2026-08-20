@@ -1,16 +1,33 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPrediction } from "../api/predictionClient";
 import type { PredictionRequest } from "../types/prediction";
 import { useLanguage } from "../i18n/LanguageContext";
 import type { TranslationKey } from "../i18n/translations";
-// TODO: replace with real locations.json exported from the notebook
+// Real location slugs confirmed from the dataset (df["location"].unique()).
 import locations from "../data/locations.json";
 
 // The "Carpet area" field always submits area_source: "carpet" — the backend
 // also accepts "super" (built-up area), but this form only collects carpet area.
 const AREA_SOURCE: PredictionRequest["area_source"] = "carpet";
+
+// Locations are raw dataset slugs (e.g. "new-delhi") — format only for display,
+// the value sent to the API stays the exact slug.
+function formatLocationLabel(slug: string): string {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// Number inputs must never accept a "-" (or exponent) keystroke — this is a
+// UX guard on top of the >=0 / >0 checks in validate() below.
+function blockInvalidNumberKeys(e: KeyboardEvent<HTMLInputElement>) {
+  if (["-", "+", "e", "E"].includes(e.key)) {
+    e.preventDefault();
+  }
+}
 
 // The `value` sent to the API must stay a fixed, untranslated string —
 // only the `labelKey` (display text) changes with the selected UI language.
@@ -18,11 +35,13 @@ const FURNISHING_OPTIONS: { value: PredictionRequest["furnishing"]; labelKey: Tr
   { value: "Furnished", labelKey: "furnishing.furnished" },
   { value: "Semi-Furnished", labelKey: "furnishing.semiFurnished" },
   { value: "Unfurnished", labelKey: "furnishing.unfurnished" },
+  { value: "Unknown", labelKey: "option.unknown" },
 ];
 
 const TRANSACTION_OPTIONS: { value: PredictionRequest["transaction"]; labelKey: TranslationKey }[] = [
   { value: "New Property", labelKey: "transaction.newProperty" },
   { value: "Resale", labelKey: "transaction.resale" },
+  { value: "Other", labelKey: "option.other" },
 ];
 
 // Values confirmed from the actual dataset (df["Ownership"].unique() / df["facing"].unique()). Keep exact spelling/spacing — must match what the model was trained on.
@@ -31,6 +50,7 @@ const OWNERSHIP_OPTIONS: { value: string; labelKey: TranslationKey }[] = [
   { value: "Co-operative Society", labelKey: "ownership.coopSociety" },
   { value: "Power Of Attorney", labelKey: "ownership.powerOfAttorney" },
   { value: "Leasehold", labelKey: "ownership.leasehold" },
+  { value: "Unknown", labelKey: "option.unknown" },
 ];
 
 // Values confirmed from the actual dataset (df["Ownership"].unique() / df["facing"].unique()). Keep exact spelling/spacing — must match what the model was trained on.
@@ -44,6 +64,7 @@ const FACING_OPTIONS: { value: string; labelKey: TranslationKey }[] = [
   { value: "South", labelKey: "facing.south" },
   { value: "South -West", labelKey: "facing.southWest" },
   { value: "South - East", labelKey: "facing.southEast" },
+  { value: "Unknown", labelKey: "option.unknown" },
 ];
 
 interface FormState {
@@ -173,7 +194,7 @@ export default function PredictionForm() {
               <option value="">{t("field.locationPlaceholder")}</option>
               {(locations as string[]).map((loc) => (
                 <option key={loc} value={loc}>
-                  {loc}
+                  {formatLocationLabel(loc)}
                 </option>
               ))}
             </select>
@@ -185,8 +206,10 @@ export default function PredictionForm() {
             <input
               id="area_sqft"
               type="number"
+              min={0}
               value={form.area_sqft}
               onChange={(e) => handleChange("area_sqft", e.target.value)}
+              onKeyDown={blockInvalidNumberKeys}
             />
             {errors.area_sqft && <span className="field-error">{t(errors.area_sqft)}</span>}
           </div>
@@ -196,8 +219,10 @@ export default function PredictionForm() {
             <input
               id="current_floor"
               type="number"
+              min={0}
               value={form.current_floor}
               onChange={(e) => handleChange("current_floor", e.target.value)}
+              onKeyDown={blockInvalidNumberKeys}
             />
             {errors.current_floor && <span className="field-error">{t(errors.current_floor)}</span>}
           </div>
@@ -207,8 +232,10 @@ export default function PredictionForm() {
             <input
               id="total_floors"
               type="number"
+              min={0}
               value={form.total_floors}
               onChange={(e) => handleChange("total_floors", e.target.value)}
+              onKeyDown={blockInvalidNumberKeys}
             />
             {errors.total_floors && <span className="field-error">{t(errors.total_floors)}</span>}
           </div>
@@ -223,8 +250,10 @@ export default function PredictionForm() {
             <input
               id="bhk"
               type="number"
+              min={0}
               value={form.bhk}
               onChange={(e) => handleChange("bhk", e.target.value)}
+              onKeyDown={blockInvalidNumberKeys}
             />
             {errors.bhk && <span className="field-error">{t(errors.bhk)}</span>}
           </div>
@@ -234,8 +263,10 @@ export default function PredictionForm() {
             <input
               id="bathroom"
               type="number"
+              min={0}
               value={form.bathroom}
               onChange={(e) => handleChange("bathroom", e.target.value)}
+              onKeyDown={blockInvalidNumberKeys}
             />
             {errors.bathroom && <span className="field-error">{t(errors.bathroom)}</span>}
           </div>
@@ -245,8 +276,10 @@ export default function PredictionForm() {
             <input
               id="balcony"
               type="number"
+              min={0}
               value={form.balcony}
               onChange={(e) => handleChange("balcony", e.target.value)}
+              onKeyDown={blockInvalidNumberKeys}
             />
             {errors.balcony && <span className="field-error">{t(errors.balcony)}</span>}
           </div>
