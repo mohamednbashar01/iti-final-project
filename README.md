@@ -83,7 +83,7 @@ The frontend collects property details from the user and sends them to the backe
 
 **Tooling**
 - Git and GitHub
-- Docker (backend containerization)
+- Docker & Docker Compose (backend and frontend containerization)
 
 ## Project Structure
 
@@ -92,7 +92,7 @@ iti-final-project/
 ├── notebooks/
 │   ├── data/
 │   │   └── house_prices.csv
-│   └── house_price_model.ipynb
+│   └── ITI_Project.ipynb
 ├── backend/
 │   ├── app/
 │   │   ├── main.py
@@ -103,17 +103,16 @@ iti-final-project/
 │   │   │   └── config.py
 │   │   ├── schemas/
 │   │   │   └── prediction.py
-│   │   ├── services/
-│   │   │   ├── preprocessing.py
-│   │   │   └── inference.py
-│   │   └── utils/
-│   │       └── logging_config.py
+│   │   └── services/
+│   │       ├── preprocessing.py
+│   │       └── inference.py
 │   ├── models/
-│   │   └── house_price.pkl
+│   │   └── Gradient_Boosting_Model.pkl
 │   ├── tests/
 │   │   └── test_prediction.py
 │   ├── requirements.txt
 │   ├── .env.example
+|   ├── .dockerignore
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
@@ -132,6 +131,8 @@ iti-final-project/
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── .env.example
+│   ├── .dockerignore
+│   ├── Dockerfile
 │   └── package.json
 ├── .gitignore
 └── README.md
@@ -204,6 +205,18 @@ npm run dev
 
 The application will be available at `http://localhost:5173`.
 
+### Running with Docker
+
+The backend and frontend can be run together using Docker Compose:
+
+​```bash
+docker compose up --build
+​```
+
+This builds and starts both containers. The backend is available at `http://localhost:8000` and the frontend at `http://localhost:5173`. The backend container mounts `backend/models/` as a volume, so the trained model file must be present there before starting. The frontend image receives the backend URL at build time via the `VITE_API_BASE_URL` build argument (configured in `docker-compose.yml`).
+
+
+
 ### Model Training
 
 ```bash
@@ -215,12 +228,14 @@ Run all cells to reproduce data cleaning, exploratory analysis, model training a
 
 ## Environment Variables
 
-**Backend (`backend/.env`)**
+***Backend (`backend/.env`)**
 
 | Variable | Description | Example |
 |---|---|---|
 | `MODEL_PATH` | Path to the serialized model file | `models/house_price.pkl` |
+| `LOCATIONS_PATH` | Path to the exported list of top locations | `models/locations.json` |
 | `ALLOWED_ORIGINS` | CORS-allowed origins for the frontend | `http://localhost:5173` |
+
 
 **Frontend (`frontend/.env`)**
 
@@ -252,60 +267,65 @@ POST /predict
 
 **Request Body**
 
-```json
+​```json
 {
-  "location": "Mumbai Andheri West",
-  "carpet_area_sqft": 850,
-  "floor_num": 3,
+  "bhk": 2,
   "bathroom": 2,
   "balcony": 1,
+  "area_sqft": 850,
+  "current_floor": 3,
+  "total_floors": 10,
   "furnishing": "Semi-Furnished",
   "transaction": "Resale",
   "ownership": "Freehold",
-  "facing": "East"
+  "facing": "East",
+  "location": "thane",
+  "area_source": "carpet"
 }
-```
+​```
 
 **Response**
 
-```json
+​```json
 {
-  "predicted_price": 4250000
+  "predicted_price": 7306032.21
 }
-```
+​```
 
 **Example Request**
 
-```bash
+​```bash
 curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{
-    "location": "Mumbai Andheri West",
-    "carpet_area_sqft": 850,
-    "floor_num": 3,
+    "bhk": 2,
     "bathroom": 2,
     "balcony": 1,
+    "area_sqft": 850,
+    "current_floor": 3,
+    "total_floors": 10,
     "furnishing": "Semi-Furnished",
     "transaction": "Resale",
     "ownership": "Freehold",
-    "facing": "East"
+    "facing": "East",
+    "location": "thane",
+    "area_source": "carpet"
   }'
-```
+​```
 
 ## Model
 
-Preprocessing and inference are bundled into a single scikit-learn `Pipeline`, combining a `ColumnTransformer` (median imputation and scaling for numeric features, most-frequent imputation and one-hot encoding for categorical features) with a regression estimator. This design keeps the backend free of manual encoding logic — the exported pipeline handles the full transformation from raw request fields to a model-ready feature vector.
+Preprocessing and inference are bundled into a single scikit-learn pipeline wrapped in a `TransformedTargetRegressor`. The `ColumnTransformer` applies standard scaling to numeric features (`bhk`, `bathroom`, `balcony`), a log transform plus scaling to skewed numeric features (`area_sqft`, `current_floor`, `total_floors`), and one-hot encoding to categorical features (`Furnishing`, `Transaction`, `Ownership`, `facing`, `location`, `area_source`). The target price is log-transformed during training (`np.log1p`) and automatically inverse-transformed on prediction (`np.expm1`) by the `TransformedTargetRegressor`, so the backend receives ready-to-use price predictions with no manual inverse transform required.
 
-At least two models are trained and compared on a held-out test set: a linear regression baseline and an ensemble model (random forest or gradient boosting regressor). The better-performing model, selected by test-set metrics, is exported for serving.
+At least two models were trained and compared on a held-out test set: a linear regression baseline and ensemble models (Random Forest and Gradient Boosting regressors). The Gradient Boosting model was selected for serving due to a significantly smaller serialized file size, making it practical to commit and containerize.
 
 **Evaluation metrics (test set)**
 
-| Model | MAE | RMSE | R² |
-|---|---|---|---|
-| Linear Regression | TBD | TBD | TBD |
-| Random Forest Regressor | TBD | TBD | TBD |
+| Model | R² | MAE (rupees) | RMSE (rupees) | MAPE |
+|---|---|---|---|---|
+| Random Forest | 0.892 | 941,532 | 4,582,794 | 8.6% |
+| Gradient Boosting | TBD | TBD | TBD | TBD |
 
-Metrics will be updated once model training and evaluation are finalized in `notebooks/house_price_model.ipynb`.
 
 ## Testing
 
