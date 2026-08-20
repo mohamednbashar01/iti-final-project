@@ -8,6 +8,10 @@ import type { TranslationKey } from "../i18n/translations";
 // TODO: replace with real locations.json exported from the notebook
 import locations from "../data/locations.json";
 
+// The "Carpet area" field always submits area_source: "carpet" — the backend
+// also accepts "super" (built-up area), but this form only collects carpet area.
+const AREA_SOURCE: PredictionRequest["area_source"] = "carpet";
+
 // The `value` sent to the API must stay a fixed, untranslated string —
 // only the `labelKey` (display text) changes with the selected UI language.
 const FURNISHING_OPTIONS: { value: PredictionRequest["furnishing"]; labelKey: TranslationKey }[] = [
@@ -44,8 +48,10 @@ const FACING_OPTIONS: { value: string; labelKey: TranslationKey }[] = [
 
 interface FormState {
   location: string;
-  carpet_area_sqft: string;
-  floor_num: string;
+  area_sqft: string;
+  bhk: string;
+  current_floor: string;
+  total_floors: string;
   bathroom: string;
   balcony: string;
   furnishing: string;
@@ -56,8 +62,10 @@ interface FormState {
 
 const INITIAL_STATE: FormState = {
   location: "",
-  carpet_area_sqft: "",
-  floor_num: "",
+  area_sqft: "",
+  bhk: "",
+  current_floor: "",
+  total_floors: "",
   bathroom: "",
   balcony: "",
   furnishing: "",
@@ -77,14 +85,21 @@ function validate(form: FormState): FieldErrors {
   if (!form.ownership) errors.ownership = "validation.ownershipRequired";
   if (!form.facing) errors.facing = "validation.facingRequired";
 
-  const carpetArea = Number(form.carpet_area_sqft);
-  if (form.carpet_area_sqft.trim() === "" || Number.isNaN(carpetArea)) {
-    errors.carpet_area_sqft = "validation.carpetAreaRequired";
+  const carpetArea = Number(form.area_sqft);
+  if (form.area_sqft.trim() === "" || Number.isNaN(carpetArea)) {
+    errors.area_sqft = "validation.carpetAreaRequired";
   } else if (carpetArea <= 0) {
-    errors.carpet_area_sqft = "validation.carpetAreaPositive";
+    errors.area_sqft = "validation.carpetAreaPositive";
   }
 
-  for (const field of ["floor_num", "bathroom", "balcony"] as const) {
+  for (const field of ["bhk", "total_floors"] as const) {
+    const value = Number(form[field]);
+    if (form[field].trim() === "" || Number.isNaN(value) || value <= 0) {
+      errors[field] = "validation.mustBePositive";
+    }
+  }
+
+  for (const field of ["current_floor", "bathroom", "balcony"] as const) {
     const raw = form[field];
     const value = Number(raw);
     if (raw.trim() === "" || Number.isNaN(value)) {
@@ -119,8 +134,11 @@ export default function PredictionForm() {
 
     const payload: PredictionRequest = {
       location: form.location,
-      carpet_area_sqft: Number(form.carpet_area_sqft),
-      floor_num: Number(form.floor_num),
+      area_sqft: Number(form.area_sqft),
+      area_source: AREA_SOURCE,
+      bhk: Number(form.bhk),
+      current_floor: Number(form.current_floor),
+      total_floors: Number(form.total_floors),
       bathroom: Number(form.bathroom),
       balcony: Number(form.balcony),
       furnishing: form.furnishing as PredictionRequest["furnishing"],
@@ -163,27 +181,36 @@ export default function PredictionForm() {
           </div>
 
           <div className="form-field">
-            <label htmlFor="carpet_area_sqft">{t("field.carpetArea")}</label>
+            <label htmlFor="area_sqft">{t("field.carpetArea")}</label>
             <input
-              id="carpet_area_sqft"
+              id="area_sqft"
               type="number"
-              value={form.carpet_area_sqft}
-              onChange={(e) => handleChange("carpet_area_sqft", e.target.value)}
+              value={form.area_sqft}
+              onChange={(e) => handleChange("area_sqft", e.target.value)}
             />
-            {errors.carpet_area_sqft && (
-              <span className="field-error">{t(errors.carpet_area_sqft)}</span>
-            )}
+            {errors.area_sqft && <span className="field-error">{t(errors.area_sqft)}</span>}
           </div>
 
           <div className="form-field">
-            <label htmlFor="floor_num">{t("field.floorNum")}</label>
+            <label htmlFor="current_floor">{t("field.floorNum")}</label>
             <input
-              id="floor_num"
+              id="current_floor"
               type="number"
-              value={form.floor_num}
-              onChange={(e) => handleChange("floor_num", e.target.value)}
+              value={form.current_floor}
+              onChange={(e) => handleChange("current_floor", e.target.value)}
             />
-            {errors.floor_num && <span className="field-error">{t(errors.floor_num)}</span>}
+            {errors.current_floor && <span className="field-error">{t(errors.current_floor)}</span>}
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="total_floors">{t("field.totalFloors")}</label>
+            <input
+              id="total_floors"
+              type="number"
+              value={form.total_floors}
+              onChange={(e) => handleChange("total_floors", e.target.value)}
+            />
+            {errors.total_floors && <span className="field-error">{t(errors.total_floors)}</span>}
           </div>
         </div>
       </div>
@@ -191,6 +218,17 @@ export default function PredictionForm() {
       <div className="form-section">
         <h2 className="section-title">{t("section.roomsFurnishing")}</h2>
         <div className="field-grid">
+          <div className="form-field">
+            <label htmlFor="bhk">{t("field.bhk")}</label>
+            <input
+              id="bhk"
+              type="number"
+              value={form.bhk}
+              onChange={(e) => handleChange("bhk", e.target.value)}
+            />
+            {errors.bhk && <span className="field-error">{t(errors.bhk)}</span>}
+          </div>
+
           <div className="form-field">
             <label htmlFor="bathroom">{t("field.bathroom")}</label>
             <input

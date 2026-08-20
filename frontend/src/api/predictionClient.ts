@@ -15,9 +15,13 @@ export async function getPrediction(
     let message = `Request failed with status ${response.status}`;
     try {
       const body = await response.json();
-      if (body && typeof body.detail === "string") {
+      if (typeof body?.detail === "string") {
+        // Plain FastAPI HTTPException, e.g. { "detail": "..." }
         message = body.detail;
-      } else if (body && typeof body.message === "string") {
+      } else if (Array.isArray(body?.detail) && body.detail.length > 0) {
+        // Pydantic validation error, e.g. { "detail": [{ "loc": [...], "msg": "...", ... }] }
+        message = body.detail.map((err: { msg?: string }) => err.msg).filter(Boolean).join(", ") || message;
+      } else if (typeof body?.message === "string") {
         message = body.message;
       }
     } catch {
