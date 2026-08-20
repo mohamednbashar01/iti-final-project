@@ -1,0 +1,578 @@
+/*
+  Fixed brand palette: white, navy, slate gray, and a warm amber accent —
+  a deep navy + gold pairing (a common trusted-and-premium combo in real
+  estate branding), not a bright-blue/orange one. These raw swatches never
+  change between themes; every other token (borders, card backgrounds,
+  hover states, dark-mode surfaces) is derived from them via color-mix()
+  so light and dark stay visually related. --error is a deliberate,
+  minimal semantic exception used only for validation/failure states.
+*/
+:root {
+  --c-white: #ffffff;
+  --c-navy: #1e3a8a;
+  --c-sky: #3b82f6;
+  --c-slate: #475569;
+  --c-amber: #d97706;
+  --error: #dc2626;
+
+  --surface: var(--c-white);
+  --card-bg: color-mix(in srgb, var(--c-slate) 3%, var(--c-white));
+  --field-bg: var(--c-white);
+  --border: color-mix(in srgb, var(--c-slate) 16%, var(--c-white));
+  --text: var(--c-slate);
+  --text-h: var(--c-navy);
+  --accent: var(--c-amber);
+  --accent-hover: color-mix(in srgb, var(--c-amber) 88%, black);
+  --accent-bg: color-mix(in srgb, var(--c-amber) 12%, var(--c-white));
+  --on-accent: var(--c-white);
+  --hero-overlay: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c-navy) 12%, transparent),
+    color-mix(in srgb, var(--c-navy) 38%, black)
+  );
+
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  font: 16px/145% var(--sans);
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--surface);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme: same swatches, roles re-derived for a dark surface. */
+:root[data-theme="dark"] {
+  --surface: color-mix(in srgb, var(--c-navy) 20%, black);
+  --card-bg: color-mix(in srgb, var(--c-white) 5%, var(--surface));
+  --field-bg: color-mix(in srgb, var(--c-white) 8%, var(--surface));
+  --border: color-mix(in srgb, var(--c-slate) 35%, var(--surface));
+  --text: color-mix(in srgb, var(--c-slate) 45%, var(--c-white));
+  --text-h: var(--c-sky);
+  --accent: color-mix(in srgb, var(--c-amber) 75%, white);
+  --accent-hover: var(--c-amber);
+  --accent-bg: color-mix(in srgb, var(--c-amber) 18%, var(--surface));
+  --on-accent: var(--c-navy);
+  --error: #f87171;
+  --hero-overlay: linear-gradient(
+    180deg,
+    color-mix(in srgb, black 10%, transparent),
+    color-mix(in srgb, black 40%, var(--c-navy))
+  );
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+main.page {
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  transition: max-width 0.2s;
+}
+
+@media (min-width: 640px) {
+  main.page {
+    max-width: 760px;
+    padding: 40px 24px 64px;
+  }
+}
+
+@media (min-width: 1024px) {
+  main.page {
+    max-width: 1080px;
+  }
+}
+
+h1 {
+  font-size: 26px;
+  color: var(--text-h);
+  margin: 0 0 8px;
+}
+
+@media (min-width: 640px) {
+  h1 {
+    font-size: 32px;
+  }
+}
+
+.subtitle {
+  margin: 0 0 24px;
+}
+
+/*
+  Homepage hero banner. Drop the background photo at frontend/public/image.jpg
+  (served at the site root as /image.jpg) — the gradient overlay above keeps
+  the white title/subtitle text readable over any photo.
+*/
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--hero-overlay), url("/image.jpg") center/cover no-repeat, var(--c-navy);
+  text-align: center;
+}
+
+.hero h1,
+.hero .subtitle {
+  color: var(--c-white);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.hero .subtitle {
+  max-width: 480px;
+  margin: 0 auto;
+  opacity: 0.96;
+}
+
+@media (min-width: 640px) {
+  .hero {
+    min-height: 460px;
+    padding: 32px;
+  }
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 640px) {
+  .app-header {
+    padding: 16px 24px;
+  }
+}
+
+.app-header-title {
+  color: var(--text-h);
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.app-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-switcher {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--field-bg);
+  color: var(--text-h);
+  min-height: 38px;
+}
+
+.language-switcher:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--field-bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Card */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 28px;
+    box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Form */
+.prediction-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* Pull the card up so it covers ~30% of the hero photo's height from the bottom. */
+  position: relative;
+  z-index: 1;
+  margin-top: -128px;
+  box-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 640px) {
+  .prediction-form {
+    margin-top: -178px;
+  }
+}
+
+.form-section + .form-section {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px 20px;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.form-field label {
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-field input,
+.form-field select {
+  font: inherit;
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--field-bg);
+  color: var(--text-h);
+  min-height: 44px;
+  transition: border-color 0.15s;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.field-error {
+  color: var(--error);
+  font-size: 13px;
+}
+
+.submit-error {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+button[type="submit"] {
+  font: inherit;
+  font-weight: 600;
+  padding: 13px 20px;
+  border-radius: 8px;
+  border: none;
+  color: var(--on-accent);
+  background: var(--accent);
+  cursor: pointer;
+  min-height: 48px;
+  transition: background 0.15s;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Result / status card */
+.result-card {
+  text-align: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.result-label {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.predicted-price {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 8px;
+}
+
+@media (min-width: 640px) {
+  .predicted-price {
+    font-size: 48px;
+  }
+}
+
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-link:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* Homepage informational sections: How It Works / Model Info / FAQ */
+.page-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-heading {
+  font-size: 20px;
+  color: var(--text-h);
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .section-heading {
+    font-size: 24px;
+  }
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .steps-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.step {
+  text-align: center;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.step h3 {
+  font-size: 16px;
+  color: var(--text-h);
+  margin: 0 0 6px;
+}
+
+.step p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.info-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.info-card .section-heading {
+  text-align: start;
+}
+
+.disclaimer {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text);
+  opacity: 0.85;
+  margin-top: 12px;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-h);
+  list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1.2em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.faq-item[open] summary::before {
+  content: "−";
+}
+
+.faq-item p {
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+
+/* Footer */
+.app-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+}
+
+.app-footer-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .app-footer-inner {
+    padding: 28px 24px;
+  }
+}
+
+.footer-iti {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iti-logo {
+  height: 32px;
+  width: auto;
+}
+
+.footer-iti p {
+  margin: 0;
+  font-size: 13px;
+  max-width: 320px;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: end;
+}
+
+.footer-meta p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.footer-github {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer-github:hover {
+  text-decoration: underline;
+}
