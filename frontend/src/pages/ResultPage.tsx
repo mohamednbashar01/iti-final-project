@@ -6,16 +6,7 @@ interface ResultLocationState {
 }
 
 function formatIndianPrice(price: number): string {
-  const crore = 1_00_00_000;
-  const lac = 1_00_000;
-
-  if (price >= crore) {
-    return `₹ ${(price / crore).toFixed(2)} Cr`;
-  }
-  if (price >= lac) {
-    return `₹ ${(price / lac).toFixed(2)} Lac`;
-  }
-  return `₹ ${price.toLocaleString("en-IN")}`;
+  return `₹ ${Math.round(price).toLocaleString("en-IN")}`;
 }
 
 export default function ResultPage() {
